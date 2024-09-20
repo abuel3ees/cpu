@@ -1,0 +1,235 @@
+module control_unit(
+    input [6:0] OPCODE,
+    input [2:0] FUNCT3,
+    output reg BEQ, BNE, JAL, JALR,
+    output reg [1:0] MemRead, MemWrite,
+    output reg [2:0] ALUOp,
+    output reg MemtoReg,
+    output reg [1:0] ALUSrc,
+    output reg RegWrite
+);
+
+always @* begin
+    // Initialize all output signals to zero by default
+    BEQ = 0;
+    BNE = 0;
+    JAL = 0;
+    JALR = 0;
+    MemRead = 0;
+    MemWrite = 0;
+    ALUOp = 0;
+    MemtoReg = 0;
+    ALUSrc = 0;
+    RegWrite = 0;
+
+    // R-Type instructions
+    if (OPCODE == 7'h33) begin // OPCODE for R-Type instructions
+        if (FUNCT3 == 3'h0) ALUOp = 3'b110; // Add
+        else if (FUNCT3 == 3'h7) ALUOp = 3'b001; // Sub
+        else if (FUNCT3 == 3'h6) ALUOp = 3'b011; // Or
+        else if (FUNCT3 == 3'h4) ALUOp = 3'b111; // Xor
+        else if (FUNCT3 == 3'h1) ALUOp = 3'b010; // Sll
+        else if (FUNCT3 == 3'h2) ALUOp = 3'b000; // Srl
+        else if (FUNCT3 == 3'h3) ALUOp = 3'b100; // Slt
+        else if (FUNCT3 == 3'h5) ALUOp = 3'b101; // And
+        RegWrite = 1;
+        ALUSrc = 0;
+    end
+    // I-Type instructions
+    else if (OPCODE == 7'h1B && FUNCT3==0) begin //Add Immediate
+    ALUOp=3'b110;
+    ALUSrc=1;
+    RegWrite=1;
+    end
+    else if (OPCODE==7'h13 && FUNCT3==3'h6) begin //And Immediate
+    ALUOp=3'b101;
+    ALUSrc=1;
+    RegWrite=1;
+    end
+    else if (OPCODE==7'h67 && FUNCT3==3'h0) begin //JALR
+    JALR=1;
+    ALUOp=3'b110;
+    ALUSrc=1;
+    RegWrite=1;
+    end
+    else if(OPCODE==7'h3&&FUNCT3==3'h2) begin //Load Byte
+    MemRead=1;
+    ALUSrc=1;
+    MemtoReg=1;
+    RegWrite=1;
+    ALUOp=3'b110;
+    end
+    else if(OPCODE==7'h3&&FUNCT3==3'h0) begin //Load Word
+     MemRead=1;
+    ALUSrc=1;
+    MemtoReg=1;
+    RegWrite=1;
+    ALUOp=3'b110;
+    end
+    else if(OPCODE==7'h13 && FUNCT3==3'h7) begin //Or immediate
+    ALUSrc=0;
+    RegWrite=1;
+    ALUOp=3'b110;
+    end
+    // SB-Type 
+    else if (OPCODE == 7'h63) begin // OPCODE for SB-Type instructions
+        if (FUNCT3 == 3'h0)begin //BEQ
+        BEQ = 1;
+        ALUOp=3'b001;
+        ALUSrc=1;
+        end
+        
+        else if (FUNCT3 == 3'h1)begin //BNE
+        BNE = 1;
+        ALUOp=3'b001;
+        ALUSrc=1;
+        end
+        end
+    
+    // UJ-Type 
+    else if (OPCODE == 7'h6F) begin //JAL
+        JAL = 1;
+        ALUOp = 3'b110; 
+        RegWrite = 1; 
+        ALUSrc = 1; 
+    end
+    //S-Type
+    else if (OPCODE==7'h23&&FUNCT3==3'h2) begin //Store Byte 
+    MemWrite=1;
+    ALUOp=3'b110;
+    ALUSrc=1;
+    end
+    else if (OPCODE==7'h23&&FUNCT3==3'h2) begin //Store Word
+    MemWrite=1;
+    ALUOp=3'b110;
+    ALUSrc=1;
+    end
+    
+    
+end
+
+endmodule // control_unit
+module control_unit_tb;
+
+    // Declare signals
+    reg [6:0] OPCODE;
+    reg [2:0] FUNCT3;
+    wire BEQ, BNE, JAL, JALR;
+    wire [1:0] MemRead, MemWrite;
+    wire [2:0] ALUOp;
+    wire MemtoReg;
+    wire [1:0] ALUSrc;
+    wire RegWrite;
+
+    // Instantiate the control_unit module
+    control_unit control_unit_inst (OPCODE,FUNCT3,BEQ,BNE,JAL,JALR,MemRead,MemWrite,ALUOp,MemtoReg,ALUSrc,RegWrit);
+
+    // Initial stimulus
+    initial begin
+        
+
+        // Test cases
+
+        // R-Type instructions
+        OPCODE = 7'h33; FUNCT3 = 3'h0; #10;
+        $display("Test case: R-Type - Add");
+        $display("BEQ=%b, BNE=%b, JAL=%b, JALR=%b, MemRead=%b, MemWrite=%b, ALUOp=%b, MemtoReg=%b, ALUSrc=%b, RegWrite=%b", BEQ, BNE, JAL, JALR, MemRead, MemWrite, ALUOp, MemtoReg, ALUSrc, RegWrite);
+
+        OPCODE = 7'h33; FUNCT3 = 3'h7; #10;
+        $display("Test case: R-Type - Sub");
+        $display("BEQ=%b, BNE=%b, JAL=%b, JALR=%b, MemRead=%b, MemWrite=%b, ALUOp=%b, MemtoReg=%b, ALUSrc=%b, RegWrite=%b", BEQ, BNE, JAL, JALR, MemRead, MemWrite, ALUOp, MemtoReg, ALUSrc, RegWrite);
+
+        OPCODE = 7'h33; FUNCT3 = 3'h6; #10;
+        $display("Test case: R-Type - Or");
+        $display("BEQ=%b, BNE=%b, JAL=%b, JALR=%b, MemRead=%b, MemWrite=%b, ALUOp=%b, MemtoReg=%b, ALUSrc=%b, RegWrite=%b", BEQ, BNE, JAL, JALR, MemRead, MemWrite, ALUOp, MemtoReg, ALUSrc, RegWrite);
+
+        OPCODE = 7'h33; FUNCT3 = 3'h4; #10;
+        $display("Test case: R-Type - Xor");
+        $display("BEQ=%b, BNE=%b, JAL=%b, JALR=%b, MemRead=%b, MemWrite=%b, ALUOp=%b, MemtoReg=%b, ALUSrc=%b, RegWrite=%b", BEQ, BNE, JAL, JALR, MemRead, MemWrite, ALUOp, MemtoReg, ALUSrc, RegWrite);
+
+        OPCODE = 7'h33; FUNCT3 = 3'h1; #10;
+        $display("Test case: R-Type - Sll");
+        $display("BEQ=%b, BNE=%b, JAL=%b, JALR=%b, MemRead=%b, MemWrite=%b, ALUOp=%b, MemtoReg=%b, ALUSrc=%b, RegWrite=%b", BEQ, BNE, JAL, JALR, MemRead, MemWrite, ALUOp, MemtoReg, ALUSrc, RegWrite);
+
+        OPCODE = 7'h33; FUNCT3 = 3'h2; #10;
+        $display("Test case: R-Type - Srl");
+        $display("BEQ=%b, BNE=%b, JAL=%b, JALR=%b, MemRead=%b, MemWrite=%b, ALUOp=%b, MemtoReg=%b, ALUSrc=%b, RegWrite=%b", BEQ, BNE, JAL, JALR, MemRead, MemWrite, ALUOp, MemtoReg, ALUSrc, RegWrite);
+
+        OPCODE = 7'h33; FUNCT3 = 3'h3; #10;
+        $display("Test case: R-Type - Slt");
+        $display("BEQ=%b, BNE=%b, JAL=%b, JALR=%b, MemRead=%b, MemWrite=%b, ALUOp=%b, MemtoReg=%b, ALUSrc=%b, RegWrite=%b", BEQ, BNE, JAL, JALR, MemRead, MemWrite, ALUOp, MemtoReg, ALUSrc, RegWrite);
+
+        OPCODE = 7'h33; FUNCT3 = 3'h5; #10;
+        $display("Test case: R-Type - And");
+        $display("BEQ=%b, BNE=%b, JAL=%b, JALR=%b, MemRead=%b, MemWrite=%b, ALUOp=%b, MemtoReg=%b, ALUSrc=%b, RegWrite=%b", BEQ, BNE, JAL, JALR, MemRead, MemWrite, ALUOp, MemtoReg, ALUSrc, RegWrite);
+
+
+        // I-Type instructions
+        OPCODE = 7'h1B; FUNCT3 = 3'h0; #10;
+        $display("Test case: I-Type - Add Immediate");
+        $display("BEQ=%b, BNE=%b, JAL=%b, JALR=%b, MemRead=%b, MemWrite=%b, ALUOp=%b, MemtoReg=%b, ALUSrc=%b, RegWrite=%b", BEQ, BNE, JAL, JALR, MemRead, MemWrite, ALUOp, MemtoReg, ALUSrc, RegWrite);
+
+
+        OPCODE = 7'h13; FUNCT3 = 3'h6; #10;
+        $display("Test case: I-Type - And Immediate");
+        $display("BEQ=%b, BNE=%b, JAL=%b, JALR=%b, MemRead=%b, MemWrite=%b, ALUOp=%b, MemtoReg=%b, ALUSrc=%b, RegWrite=%b", BEQ, BNE, JAL, JALR, MemRead, MemWrite, ALUOp, MemtoReg, ALUSrc, RegWrite);
+
+
+        // JALR instruction
+        OPCODE = 7'h67; FUNCT3 = 3'h0; #10;
+        $display("Test case: JALR");
+        $display("BEQ=%b, BNE=%b, JAL=%b, JALR=%b, MemRead=%b, MemWrite=%b, ALUOp=%b, MemtoReg=%b, ALUSrc=%b, RegWrite=%b", BEQ, BNE, JAL, JALR, MemRead, MemWrite, ALUOp, MemtoReg, ALUSrc, RegWrite);
+
+
+        // Load Byte instruction
+        OPCODE = 7'h03; FUNCT3 = 3'h2; #10;
+        $display("Test case: Load Byte");
+        $display("BEQ=%b, BNE=%b, JAL=%b, JALR=%b, MemRead=%b, MemWrite=%b, ALUOp=%b, MemtoReg=%b, ALUSrc=%b, RegWrite=%b", BEQ, BNE, JAL, JALR, MemRead, MemWrite, ALUOp, MemtoReg, ALUSrc, RegWrite);
+
+
+        // Load Word instruction
+        OPCODE = 7'h03; FUNCT3 = 3'h0; #10;
+        $display("Test case: Load Word");
+        $display("BEQ=%b, BNE=%b, JAL=%b, JALR=%b, MemRead=%b, MemWrite=%b, ALUOp=%b, MemtoReg=%b, ALUSrc=%b, RegWrite=%b", BEQ, BNE, JAL, JALR, MemRead, MemWrite, ALUOp, MemtoReg, ALUSrc, RegWrite);
+
+
+        // Or Immediate instruction
+        OPCODE = 7'h13; FUNCT3 = 3'h7; #10;
+        $display("Test case: Or Immediate");
+        $display("BEQ=%b, BNE=%b, JAL=%b, JALR=%b, MemRead=%b, MemWrite=%b, ALUOp=%b, MemtoReg=%b, ALUSrc=%b, RegWrite=%b", BEQ, BNE, JAL, JALR, MemRead, MemWrite, ALUOp, MemtoReg, ALUSrc, RegWrite);
+
+
+        // SB-Type instructions
+        OPCODE = 7'h63; FUNCT3 = 3'h0; #10;
+        $display("Test case: SB-Type - BEQ");
+        $display("BEQ=%b, BNE=%b, JAL=%b, JALR=%b, MemRead=%b, MemWrite=%b, ALUOp=%b, MemtoReg=%b, ALUSrc=%b, RegWrite=%b", BEQ, BNE, JAL, JALR, MemRead, MemWrite, ALUOp, MemtoReg, ALUSrc, RegWrite);
+
+
+        OPCODE = 7'h63; FUNCT3 = 3'h1; #10;
+        $display("Test case: SB-Type - BNE");
+        $display("BEQ=%b, BNE=%b, JAL=%b, JALR=%b, MemRead=%b, MemWrite=%b, ALUOp=%b, MemtoReg=%b, ALUSrc=%b, RegWrite=%b", BEQ, BNE, JAL, JALR, MemRead, MemWrite, ALUOp, MemtoReg, ALUSrc, RegWrite);
+
+
+        // JAL instruction
+        OPCODE = 7'h6F; FUNCT3 = 3'h0; #10;
+        $display("Test case: JAL");
+        $display("BEQ=%b, BNE=%b, JAL=%b, JALR=%b, MemRead=%b, MemWrite=%b, ALUOp=%b, MemtoReg=%b, ALUSrc=%b, RegWrite=%b", BEQ, BNE, JAL, JALR, MemRead, MemWrite, ALUOp, MemtoReg, ALUSrc, RegWrite);
+
+
+        // Store Byte instruction
+        OPCODE = 7'h23; FUNCT3 = 3'h2; #10;
+        $display("Test case: Store Byte");
+        $display("BEQ=%b, BNE=%b, JAL=%b, JALR=%b, MemRead=%b, MemWrite=%b, ALUOp=%b, MemtoReg=%b, ALUSrc=%b, RegWrite=%b", BEQ, BNE, JAL, JALR, MemRead, MemWrite, ALUOp, MemtoReg, ALUSrc, RegWrite);
+
+
+        // Store Word instruction
+        OPCODE = 7'h23; FUNCT3 = 3'h2; #10;
+        $display("Test case: Store Word");
+        $display("BEQ=%b, BNE=%b, JAL=%b, JALR=%b, MemRead=%b, MemWrite=%b, ALUOp=%b, MemtoReg=%b, ALUSrc=%b, RegWrite=%b", BEQ, BNE, JAL, JALR, MemRead, MemWrite, ALUOp, MemtoReg, ALUSrc, RegWrite);
+
+        
+        $finish;
+    end
+
+endmodule
+
