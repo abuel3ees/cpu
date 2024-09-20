@@ -1,0 +1,132 @@
+module alu(A, B, ALU_Result, ALUOpCode, Zero);
+  input [63:0] A, B;
+  input [2:0] ALUOpCode;
+  output reg Zero;
+  output reg [63:0] ALU_Result;
+
+  always @(*) begin
+    Zero = 0; 
+
+    case(ALUOpCode)
+      3'b000: begin 
+        ALU_Result = A >> B;
+        if(ALU_Result == 0) 
+          Zero = 1;
+      end
+      3'b001: begin
+        ALU_Result = A - B;
+        if(ALU_Result == 0)
+          Zero = 1;
+      end
+      3'b010: begin
+        ALU_Result = A << B;
+        if(ALU_Result == 0)
+          Zero = 1;
+      end
+      3'b011: begin 
+        ALU_Result = A | B;
+        if(ALU_Result == 0)
+          Zero = 1;
+      end
+      3'b100: begin 
+        if(A < B)
+          ALU_Result = 1;
+        else
+          ALU_Result = 0;
+       
+      end
+      3'b101: begin 
+        ALU_Result = A & B;
+        if(ALU_Result == 0)
+          Zero = 1;
+      end
+      3'b110: begin 
+        ALU_Result = A + B;
+        if(ALU_Result == 0)
+          Zero = 1;
+      end
+      3'b111: begin 
+        ALU_Result = A ^ B;
+        if(ALU_Result == 0)
+          Zero = 1;
+      end
+      default: begin 
+        ALU_Result = 0; 
+        Zero = 1; 
+      end
+    endcase
+  end
+endmodule // alu
+
+module alu_tb();
+  reg [63:0] A, B;
+  reg [2:0] ALUOpCode;
+  wire Zero;
+  wire [63:0] ALU_Result;
+
+ 
+  alu alu_inst(A,B,ALU_Result,ALUOpCode,Zero);
+
+
+  reg clk_tb = 0;
+  always #5 clk_tb = ~clk_tb;
+
+ 
+  initial begin
+    
+
+   
+    // SRL 
+    A = 16'hFFFF; B= 4'h2; ALUOpCode = 3'b000; #10;
+    $display("SRL: Time=%0t, A=%h, B=%h, ALUOpCode=%b, ALU_Result=%h, Zero=%b",
+             $time, A, B, ALUOpCode, ALU_Result, Zero);
+             $display("----------------------------------------");
+
+    // SUB 
+    A= 16'h00FF; B = 16'h0010; ALUOpCode= 3'b001; #10;
+    $display("Subtract: Time=%0t, A=%h, B=%h, ALUOpCode=%b, ALU_Result=%h, Zero=%b",
+             $time, A, B, ALUOpCode, ALU_Result, Zero);
+             $display("----------------------------------------");
+
+    // SLL 
+    A = 16'h0001; B = 4'h3; ALUOpCode = 3'b010; #10;
+    $display("SLL: Time=%0t, A=%h, B=%h, ALUOpCode=%b, ALU_Result=%h, Zero=%b",
+             $time, A, B, ALUOpCode, ALU_Result, Zero);
+             $display("----------------------------------------");
+
+    // OR 
+    A = 16'h00FF; B= 16'h0F0F; ALUOpCode = 3'b011; #10;
+    $display("OR: Time=%0t, A=%h, B=%h, ALUOpCode=%b, ALU_Result=%h, Zero=%b",
+             $time, A, B, ALUOpCode, ALU_Result, Zero);
+             $display("----------------------------------------");
+
+    // SLT 
+    A = 16'h000F; B= 16'h0010; ALUOpCode= 3'b100; #10;
+    $display("SLT: Time=%0t, A=%h, B=%h, ALUOpCode=%b, ALU_Result=%h, Zero=%b",
+             $time, A, B, ALUOpCode, ALU_Result, Zero);
+             $display("----------------------------------------");
+
+    // AND
+    A = 16'h00FF; B = 16'h0F0F; ALUOpCode = 3'b101; #10;
+    $display("AND: Time=%0t, A=%h, B=%h, ALUOpCode=%b, ALU_Result=%h, Zero=%b",
+             $time, A, B, ALUOpCode, ALU_Result, Zero);
+             $display("----------------------------------------");
+
+    // ADD 
+    A = 16'h00FF; B = 16'h0010; ALUOpCode = 3'b110; #10;
+    $display("ADDITION: Time=%0t, A=%h, B=%h, ALUOpCode=%b, ALU_Result=%h, Zero=%b",
+             $time, A, B, ALUOpCode, ALU_Result, Zero);
+             $display("----------------------------------------");
+
+    // XOR 
+    A = 16'h00FF; B = 16'h0F0F; ALUOpCode = 3'b111; #10;
+    $display("XOR: Time=%0t, A=%h, B=%h, ALUOpCode=%b, ALU_Result=%h, Zero=%b",
+             $time, A, B, ALUOpCode, ALU_Result, Zero);
+             $display("----------------------------------------");
+
+    #1
+   $finish;
+  
+  end
+endmodule // alu_tb
+
