@@ -1,1 +1,175 @@
+module ID_EXE_REG(
+    input clk, reset_n, beq, bne, jal, jalr, memread, memwrite, memtoreg,
+    input [31:0] instruction,
+    input [4:0] address,
+    input [1:0] alusrc,
+    input [63:0] rd1, rd2,
+    input [31:0] immediate,
+    output reg [63:0] rd1o, rd2o,
+    output reg beqo, bneo, jalo, jalro, memreado, memwriteo, memtorego,
+    output reg [1:0] alusrco,
+    output reg [4:0] addresstoalu,
+    output reg [63:0] instrout,
+    output reg [3:0] instr301412,
+    output reg [4:0] inst117out
+);
+
+    wire [31:0] immwire;
+
+    always @(posedge clk) begin
+        if (reset_n == 1'b1) begin
+            addresstoalu  <= 5'b0;
+            rd1o          <= 64'b0;
+            rd2o          <= 64'b0;
+            instrout      <= 64'b0;
+            instr301412   <= 4'b0;
+            inst117out    <= 5'b0;
+            beqo          <= 1'b0;
+            bneo          <= 1'b0;
+            jalo          <= 1'b0;
+            jalro         <= 1'b0;
+            memreado      <= 1'b0;
+            memwriteo     <= 1'b0;
+            memtorego     <= 1'b0;
+        end
+        else begin
+            addresstoalu  <= address;
+            rd1o          <= rd1;
+            rd2o          <= rd2;
+            beqo          <= beq;
+            bneo          <= bne;
+            jalo          <= jal;
+            jalro         <= jalr;
+            memreado      <= memread;
+            memwriteo     <= memwrite;
+            memtorego     <= memtoreg;
+            alusrco       <= alusrc;
+            instrout      <= {instruction, immwire};
+            instr301412   <= {instruction[30], instruction[14:12]};
+            inst117out    <= instruction[11:7];
+        end
+    end
+
+    assign immwire = immediate; // Assign immediate to immwire
+
+endmodule // ID_EXE_REG
+
+
+
+module testbench;
+
+    // Inputs
+    reg clk;
+    reg reset_n;
+    reg beq, bne, jal, jalr, memread, memwrite, memtoreg;
+    reg [31:0] instruction;
+    reg [4:0] address;
+    reg [1:0] alusrc;
+    reg [63:0] rd1, rd2;
+    reg [31:0] immediate;
+
+    // Outputs
+    wire [63:0] rd1o, rd2o;
+    wire beqo, bneo, jalo, jalro, memreado, memwriteo, memtorego;
+    wire [1:0] alusrco;
+    wire [4:0] addresstoalu;
+    wire [63:0] instrout;
+    wire [3:0] instr301412;
+    wire [4:0] inst117out;
+
+    // Instantiate the unit under test (UUT)
+    ID_EXE_REG uut (
+        .clk(clk),
+        .reset_n(reset_n),
+        .beq(beq),
+        .bne(bne),
+        .jal(jal),
+        .jalr(jalr),
+        .memread(memread),
+        .memwrite(memwrite),
+        .memtoreg(memtoreg),
+        .instruction(instruction),
+        .address(address),
+        .alusrc(alusrc),
+        .rd1(rd1),
+        .rd2(rd2),
+        .immediate(immediate),
+        .rd1o(rd1o),
+        .rd2o(rd2o),
+        .beqo(beqo),
+        .bneo(bneo),
+        .jalo(jalo),
+        .jalro(jalro),
+        .memreado(memreado),
+        .memwriteo(memwriteo),
+        .memtorego(memtorego),
+        .alusrco(alusrco),
+        .addresstoalu(addresstoalu),
+        .instrout(instrout),
+        .instr301412(instr301412),
+        .inst117out(inst117out)
+    );
+ always #5 clk=~clk;
+    // Assign input values
+    initial begin
+        clk <= 0;
+        reset_n <= 1'b0;
+        beq <= 1'b0;
+        bne <= 1'b0;
+        jal <= 1'b0;
+        jalr <= 1'b0;
+        memread <= 1'b0;
+        memwrite <= 1'b0;
+        memtoreg <= 1'b0;
+        instruction <= 32'hdeadbeef;
+        address <= 5'b10101;
+        alusrc <= 2'b00;
+        rd1 <= 64'h1122334455667788;
+        rd2 <= 64'h9988776655443322;
+        immediate <= 32'habcdef01;
+        
+        #100  // Wait for one time unit for values to propagate
+        
+        // Display results
+        $display("rd1o = %h", rd1o);
+        $display("rd2o = %h", rd2o);
+        $display("beqo = %b", beqo);
+        $display("bneo = %b", bneo);
+        $display("jalo = %b", jalo);
+        $display("jalro = %b", jalro);
+        $display("memreado = %b", memreado);
+        $display("memwriteo = %b", memwriteo);
+        $display("memtorego = %b", memtorego);
+        $display("alusrco = %b", alusrco);
+        $display("addresstoalu = %b", addresstoalu);
+        $display("instrout = %h", instrout);
+        $display("instr301412 = %b", instr301412);
+        $display("inst117out = %b", inst117out);
+        
+                
+        
+        reset_n <= 1'b1;
+        #100
+        $display("--------------------------------------------------");
+        $display("after reset:");
+        $display("rd1o = %h", rd1o);
+        $display("rd2o = %h", rd2o);
+        $display("beqo = %b", beqo);
+        $display("bneo = %b", bneo);
+        $display("jalo = %b", jalo);
+        $display("jalro = %b", jalro);
+        $display("memreado = %b", memreado);
+        $display("memwriteo = %b", memwriteo);
+        $display("memtorego = %b", memtorego);
+        $display("alusrco = %b", alusrco);
+        $display("addresstoalu = %b", addresstoalu);
+        $display("instrout = %h", instrout);
+        $display("instr301412 = %b", instr301412);
+        $display("inst117out = %b", inst117out);
+
+        
+        $finish;  // End simulation
+    end
+
+endmodule // testbench
 
