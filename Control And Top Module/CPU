@@ -1,1 +1,212 @@
+`include "IF_stage.v"
+`include "IF_ID_REG.v"
+`include "ID_stage.v"
+`include "ID_EXE_REG.v"
+`include "EXE_stage.v"
+`include "EXE_MEM_REG.v"
+`include "MEM_stage.v"
+`include "MEM_WB_REG.v"
+`include "WB_stage.v"
+
+module TopModule (
+    input clk,
+    input reset_n,
+    input [31:0] PCin,
+    output [31:0] PCout,
+    output [63:0] WriteBackData
+);
+
+    wire [31:0] IF_PCout, IF_instruction;
+    wire [31:0] ID_PCout, ID_instruction;
+    wire [63:0] EXE_A, EXE_B, EXE_ALUResult, EXE_WriteData;
+    wire [63:0] MEM_ReadData;
+    wire MEM_PCSrc;
+    wire WB_WriteBack;
+    wire [31:0] instruction_IF_ID, address_IF_ID;
+    wire [63:0] rd1_ID_EXE, rd2_ID_EXE;
+    input [31:0] imm_ID_EXE;
+    wire beq_ID_EXE, bne_ID_EXE, jal_ID_EXE, jalr_ID_EXE, memread_ID_EXE, memwrite_ID_EXE, memtoreg_ID_EXE;
+    wire [1:0] alusrc_ID_EXE;
+    wire [4:0] addresstoalu_ID_EXE, inst117out_ID_EXE;
+    wire [3:0] instr301412_ID_EXE;
+    wire [63:0] instrout_ID_EXE;
+    wire [63:0] addsum_EXE_MEM, rd2_EXE_MEM;
+    wire zero_EXE_MEM, memread_EXE_MEM, beq_EXE_MEM, bne_EXE_MEM, jal_EXE_MEM, memtoreg_EXE_MEM, memwrite_EXE_MEM;
+    wire [4:0] instr117_EXE_MEM;
+    wire pcsrc_EXE_MEM;
+    wire [63:0] aluresult_EXE_MEM;
+    wire regwrite_MEM_WB, pcsrc_MEM_WB, memtoreg_MEM_WB;
+    wire [63:0] rd_MEM_WB, alures_MEM_WB;
+    wire [4:0] instr117_MEM_WB;
+    wire [31:0] jr;
+    wire [4:0] instr117out_ID_EXE;
+
+    IF_stage IF (
+        .clk(clk),
+        .reset(reset_n),
+        .PCin(PCin),
+        .instruction(IF_instruction),
+        .pcout(IF_PCout),
+        .jr(jr)
+    );
+
+    IF_ID_REG IF_ID (
+        .clk(clk),
+        .reset_n(reset_n),
+        .instruction(IF_instruction),
+        .address(IF_PCout),
+        .addresstobuffer(address_IF_ID),
+        .instructiontomem(instruction_IF_ID)
+    );
+
+    ID_stage ID (
+        .clk(clk),
+        .reset_n(reset_n),
+        .rs1(instruction_IF_ID[19:15]),
+        .rs2(instruction_IF_ID[24:20]),
+        .writeaddress(addresstoalu_ID_EXE),
+        .writedata(WriteBackData),
+        .rd1(rd1_ID_EXE),
+        .rd2(rd2_ID_EXE),
+        .opcode(instruction_IF_ID[6:0]),
+        .beq(beq_ID_EXE),
+        .bne(bne_ID_EXE),
+        .jal(jal_ID_EXE),
+        .jalr(jalr_ID_EXE),
+        .memread(memread_ID_EXE),
+        .memwrite(memwrite_ID_EXE),
+        .aluop(),
+        .memtoreg(memtoreg_ID_EXE),
+        .alusrc(alusrc_ID_EXE),
+        .regwrite(),
+        .instruction(instruction_IF_ID),
+        .immediate(imm_ID_EXE),
+        .br_offset(),
+        .prdct_crct()
+    );
+
+    ID_EXE_REG ID_EXE (
+        .clk(clk),
+        .reset_n(reset_n),
+        .beq(beq_ID_EXE),
+        .bne(bne_ID_EXE),
+        .jal(jal_ID_EXE),
+        .jalr(jalr_ID_EXE),
+        .memread(memread_ID_EXE),
+        .memwrite(memwrite_ID_EXE),
+        .memtoreg(memtoreg_ID_EXE),
+        .instruction(instruction_IF_ID),
+        .address(address_IF_ID[4:0]),
+        .alusrc(alusrc_ID_EXE),
+        .rd1(rd1_ID_EXE),
+        .rd2(rd2_ID_EXE),
+        .immediate(imm_ID_EXE),
+        .rd1o(EXE_A),
+        .rd2o(EXE_B),
+        .beqo(),
+        .bneo(),
+        .jalo(),
+        .jalro(),
+        .memreado(),
+        .memwriteo(),
+        .memtorego(),
+        .alusrco(),
+        .addresstoalu(addresstoalu_ID_EXE),
+        .instrout(instrout_ID_EXE),
+        .instr301412(instr301412_ID_EXE),
+        .inst117out(inst117out_ID_EXE)
+    );
+
+    EXE_stage EXE (
+        .clk(clk),
+        .reset_n(reset_n),
+        .A(EXE_A),
+        .B(EXE_B),
+        .aluresult(EXE_ALUResult),
+        .zero(zero_EXE_MEM),
+        .OPCODE(instrout_ID_EXE[6:0]),
+        .FUNCT3(instr301412_ID_EXE[2:0]),
+        .BEQ(),
+        .BNE(),
+        .JAL(),
+        .JALR(),
+        .MemRead(),
+        .MemWrite(),
+        .ALUOp(),
+        .MemtoReg(),
+        .ALUSrc(),
+        .RegWrite(),
+        .pcsrc(pcsrc_EXE_MEM)
+    );
+
+    EXE_MEM_REG EXE_MEM (
+        .clk(clk),
+        .reset_n(reset_n),
+        .memread(memread_ID_EXE),
+        .zero(zero_EXE_MEM),
+        .beq(beq_ID_EXE),
+        .bne(bne_ID_EXE),
+        .jal(jal_ID_EXE),
+        .memtoreg(memtoreg_ID_EXE),
+        .memwrite(memwrite_ID_EXE),
+        .pcsrc(pcsrc_EXE_MEM),
+        .addsum(rd1_ID_EXE + rd2_ID_EXE),
+        .aluresult(EXE_ALUResult),
+        .rd2(rd2_ID_EXE),
+        .addsumo(addsum_EXE_MEM),
+        .aluresulto(aluresult_EXE_MEM),
+        .rd2o(rd2_EXE_MEM),
+        .zeroo(zero_EXE_MEM),
+        .memreado(memread_EXE_MEM),
+        .beqo(beq_EXE_MEM),
+        .bneo(bne_EXE_MEM),
+        .jalo(jal_EXE_MEM),
+        .memtorego(memtoreg_EXE_MEM),
+        .memwriteo(memwrite_EXE_MEM),
+        .instr117o(instr117_EXE_MEM),
+        .instr117(instr117out_ID_EXE)
+    );
+
+    MEM_stage MEM (
+        .clk(clk),
+        .reset_n(reset_n),
+        .address(aluresult_EXE_MEM[31:0]),
+        .writedata(rd2_EXE_MEM),
+        .writeenable(memwrite_EXE_MEM),
+        .readenable(memread_EXE_MEM),
+        .readdata(MEM_ReadData),
+        .pcsrc(MEM_PCSrc),
+        .branch(beq_EXE_MEM),
+        .zero(zero_EXE_MEM)
+    );
+
+    MEM_WB_REG MEM_WB (
+        .clk(clk),
+        .reset_n(reset_n),
+        .regwrite(memread_EXE_MEM),
+        .pcsrc(MEM_PCSrc),
+        .memtoreg(memtoreg_EXE_MEM),
+        .rd(MEM_ReadData),
+        .alures(aluresult_EXE_MEM),
+        .instr117(instr117_EXE_MEM),
+        .regwriteo(regwrite_MEM_WB),
+        .pcsrco(pcsrc_MEM_WB),
+        .memtorego(memtoreg_MEM_WB),
+        .rdo(rd_MEM_WB),
+        .alureso(alures_MEM_WB),
+        .instr117o(instr117_MEM_WB)
+    );
+
+    WB_stage WB (
+        .clk(clk),
+        .reset_n(reset_n),
+        .address(alures_MEM_WB),
+        .readdata(rd_MEM_WB),
+        .writedata(WriteBackData),
+        .writeback(regwrite_MEM_WB)
+    );
+
+    assign PCout = ID_PCout;
+
+endmodule
 
