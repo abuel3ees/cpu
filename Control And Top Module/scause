@@ -1,1 +1,68 @@
+module scause(clk,reset_n,exception,exceptionflag);
+  input clk,reset_n,exception;
+  output reg exceptionflag;
+  
+  always@(posedge clk) begin
+    if(reset_n)
+      exceptionflag=0;
+    else if(!exception)
+      exceptionflag=0;
+    else if(exception)
+      exceptionflag=1;
+  end
+endmodule
+
+`timescale 1ns / 1ps
+
+module scause_tb;
+
+  reg clk;
+  reg reset_n;
+  reg exception;
+
+  wire exceptionflag;
+
+  scause uut (
+    .clk(clk), 
+    .reset_n(reset_n), 
+    .exception(exception), 
+    .exceptionflag(exceptionflag)
+  );
+
+  always #5 clk = ~clk;
+
+  initial begin
+    clk = 0;
+    reset_n = 1;
+    exception = 0;
+
+    #10;
+    
+    reset_n = 0;
+    #10;
+    reset_n = 1;
+    #10;
+    
+    if (exceptionflag != 0) $display("Test 1: exceptionflag = %b Failed", exceptionflag);
+    else $display("Test 1: exceptionflag = %b Passed", exceptionflag);
+    
+    exception = 1;
+    #10;
+    if (exceptionflag != 1) $display("Test 2: exceptionflag = %b Failed", exceptionflag);
+    else $display("Test 2: exceptionflag = %b Passed", exceptionflag);
+    
+    exception = 0;
+    #10;
+    if (exceptionflag != 0) $display("Test 3: exceptionflag = %b Failed", exceptionflag);
+    else $display("Test 3: exceptionflag = %b Passed", exceptionflag);
+
+    exception = 1;
+    #10;
+    if (exceptionflag != 1) $display("Test 4: exceptionflag = %b Failed", exceptionflag);
+    else $display("Test 4: exceptionflag = %b Passed", exceptionflag);
+
+    $finish;
+  end
+
+endmodule
 
