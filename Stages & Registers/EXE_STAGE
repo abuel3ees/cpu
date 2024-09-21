@@ -1,1 +1,34 @@
+module exeadderalu(A,B,out);
+input [31:0] A, B;
+output [31:0] out;
+always@ * begin 
+out=A+B;
+end
+endmodule
+ 
 
+
+
+module EXE_stage(clk, reset_n,A,B,alures,zero, OPCODE,
+    FUNCT3,BEQ, BNE, JAL, JALR, MemRead, MemWrite,ALUOp,MemtoReg,ALUSrc,RegWrite);
+    input clk, reset_n;
+    input [63:0] A, B;
+    input [2:0] aluopcode;
+    output zero;
+    input [6:0] OPCODE;
+    input [2:0] FUNCT3;
+    output reg BEQ, BNE, JAL, JALR;
+    output reg [1:0] MemRead, MemWrite;
+    output reg [2:0] ALUOp;
+    output reg MemtoReg;
+    output reg [1:0] ALUSrc;
+    output reg RegWrite;
+    wire [63:0] rd1, shiftedrd2, muxtoalu,aluresult;
+    wire[31:0] pcadd, shiftedadd,exeout;
+    wire ALUOPP;
+    exeadderalu a2(pcadd,shiftedadd,exeout);
+    mux m1(rd1,shiftedrd2,ALUSrc,muxtoalu);
+    control_unit c1(OPCODE,FUNCT3,BEQ,BNE,JAL,JALR,MemRead,Memwrite,ALUOp,MemtoReg,ALUSrc,Regwrite);
+    assign ALUOPP=ALUOp;
+    alu a1(rd1,muxtoalu,alures,ALUOPP,zero);
+endmodule // EXE_stage
