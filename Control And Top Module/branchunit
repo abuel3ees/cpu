@@ -1,1 +1,45 @@
 
+module Branch_predict(bnef, bef, rd1, rd2, inst, offset, tf);
+
+  input bnef, bef;
+  input [63:0] rd1, rd2;
+  input [31:0] inst;
+  output reg [12:0] offset;
+  output reg tf;
+
+  always@ (*)
+    begin
+      if(bef & !bned)
+       begin
+         if(rd1 == rd2)
+           begin
+             offset <= {inst[31] , inst[7] , inst[30:25], inst[11:8] , 0};
+               tf <= 1;
+           end
+         else 
+           begin
+             offset <= 0;
+             tf <= 0;
+           end
+       end
+      else if(bnef & !bef)
+        begin
+          if(rd1 != rd2)
+            begin
+              offset <= {inst[31] , inst[7] , inst[30:25], inst[11:8], 0};
+                tf <= 1;
+            end
+          else
+            begin
+              offset <= 0;
+              tf <= 0;
+            end
+        end
+        else
+         begin
+           offset <= 0;
+           tf <= 0;
+         end
+
+     end
+endmodule
