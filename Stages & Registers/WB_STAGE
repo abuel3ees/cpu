@@ -1,1 +1,11 @@
+module WB_stage(clk, reset_n,address,readdata,writedata,writeback);
+input clk,reset_n;
+input [31:0]address;
+input [63:0]readdata;
+output reg [63:0]writedata;
+input writeback;
 
+mux m1(address,readdata,writeback,writedata);
+
+
+endmodule // WB_stage
