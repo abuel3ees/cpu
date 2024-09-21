@@ -1,1 +1,14 @@
-
+module MEM_stage(clk, reset_n,address,writeenable,readenable,writedata,readdata,PCSrc,branch,zero);
+    
+    input clk, reset_n;
+    input [31:0]address;
+    input writeenable,readenable;
+    input [63:0] writedata;
+    output reg [63:0] readdata;
+    output reg pcsrc;
+    input branch,zero;
+    wire pcsrcwire;
+    data_memory m1(clk,reset_n,memwritewire,memreadwire,writedata,readdata);
+    and(pcsrc,zero,branch);
+    assign pcsrcwire=pcsrc;
+endmodule // MEM_stage
