@@ -1,1 +1,12 @@
+module IF_stage (clk, reset, PCin, instruction, pcout, jr);
+input clk, reset, PCin;
+input [31:0] jr;
+output reg [31:0] pcout, instruction;
+wire[31:0] addertomux, muxtocounter,pctoIM;
 
+mux m1 (addertomux, jr, PCin,muxtocounter);
+pc_register p1 (clk,reset, 1 , muxtocounter, pctoIM);
+instruction_memory M1(clk,pctoIM,instruction);
+adder a1(pctoIM,4,0,addertomux,rubbishcarry);
+assign pcout = pctoIM;
+endmodule // IFStage
