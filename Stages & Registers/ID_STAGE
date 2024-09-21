@@ -1,1 +1,22 @@
-
+module ID_stage(clk, reset_n, rs1,rs2,writeaddress,writedata,rd1,rd2,opcode,,beq,bne,jal,jalr,memread,memwrite,aluop,memtoreg,alusrc,regwrite,instruction,immediate);
+input [31:0] instruction;
+output reg [31:0] immediate;
+input clk , reset_n; 
+output reg beq,bne,jal,jalr;
+output reg [1:0] memread,memwrite;
+output reg [2:0] aluop;
+output reg memtoreg;
+output reg [1:0] ALUSrc;
+output reg regwrite;
+input [4:0] writeaddress;
+input [63:0] writedata;
+output reg [63:0] rd1,rd2;
+wire [63:0] rd1toreg, rd2toreg;
+wire writeenable;
+control_unit c1 (instruction[6:0],instruction[14:12],beq,bne,jal,jalr,memread,memwrite,aluop,memtoreg,alusrc,regwrite);
+assign writeenable=regwrite;
+register_file r1 (clk,reset_n,instruction[19:15],instruction[24:20],writeaddress,writeenable,writedata,rd1,rd2);
+assign rd1toreg=rd1;
+assign rd2toreg=rd2;
+immediate_gen g1(instruction,immediate)
+endmodule // ID_stage
