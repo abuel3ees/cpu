@@ -1,1 +1,103 @@
+module MEM_WB_REG(clk, reset_n,regwrite,regwriteo,pcsrc,pcsrco,memtoreg,memtorego,rd,rdo,alures,alureso,instr117,instr117o);
+input clk,reset_n,regwrite,pcsrc,memtoreg;
+input [63:0]rd,alures;
+input [4:0]instr117;
+output reg regwriteo,pcsrco,memtorego;
+output reg [63:0] rdo,alureso;
+output reg [4:0]instr117o;
+
+always @(posedge clk) begin
+if(reset_n==1) begin
+regwriteo=0;
+pcsrco=0;
+memtorego=0;
+rdo=0;
+alureso=0;
+instr117o=0;
+end
+else begin
+regwriteo<=regwrite;
+pcsrco<=pcsrc;
+memtorego<=memtoreg;
+rdo<=rd;
+alureso<=alures;
+instr117o<=instr117;
+end
+end
+
+	
+endmodule //MEM_WB_REG
+
+`timescale 1ns / 1ps
+
+module testbench;
+
+    // Inputs
+    reg clk;
+    reg reset_n;
+    reg regwrite, pcsrc, memtoreg;
+    reg [63:0] rd, alures;
+    reg [4:0] instr117;
+
+    // Outputs
+    wire regwriteo, pcsrco, memtorego;
+    wire [63:0] rdo, alureso;
+    wire [4:0] instr117o;
+
+    // Instantiate the unit under test (UUT)
+    MEM_WB_REG uut (
+        .clk(clk),
+        .reset_n(reset_n),
+        .regwrite(regwrite),
+        .pcsrc(pcsrc),
+        .memtoreg(memtoreg),
+        .rd(rd),
+        .alures(alures),
+        .instr117(instr117),
+        .regwriteo(regwriteo),
+        .pcsrco(pcsrco),
+        .memtorego(memtorego),
+        .rdo(rdo),
+        .alureso(alureso),
+        .instr117o(instr117o)
+    );
+
+    // Clock generation
+    always #5 clk=~clk;
+
+    // Assign input values
+    initial begin
+        clk = 0;
+        reset_n = 0;
+        regwrite = 0;
+        pcsrc = 0;
+        memtoreg = 0;
+        rd = 64'hdeadbeefdeadbeef;
+        alures = 64'habcdefabcdefabcd;
+        instr117 = 5'b10101;
+
+        // Wait for one time unit for values to propagate
+        #100;
+
+        // Display initial results
+        $display("Initial values:");
+        $display("regwriteo = %b, pcsrco = %b, memtorego = %b, rdo = %h, alureso = %h, instr117o = %b",
+                  regwriteo, pcsrco, memtorego, rdo, alureso, instr117o);
+
+        // Assert reset
+        reset_n = 1;
+        #100;
+       
+
+        // Display results after reset
+        $display("--------------------------------------------------");
+        $display("After reset:");
+        $display("regwriteo = %b, pcsrco = %b, memtorego = %b, rdo = %h, alureso = %h, instr117o = %b",
+                  regwriteo, pcsrco, memtorego, rdo, alureso, instr117o);
+
+        $finish;  // End simulation
+    end
+
+endmodule // testbench
+
 
