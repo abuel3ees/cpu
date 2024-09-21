@@ -1,1 +1,135 @@
+module EXE_MEM_REG(
+    input clk, reset_n, memread,zero, beq, bne, jal, memtoreg, memwrite,pcsrc,
+    input [63:0] addsum, aluresult, rd2,
+    output reg [63:0] addsumo, aluresulto, rd2o,
+    output reg  zeroo,
+    output reg  pcsrco,
+    output reg memreado, beqo, bneo, jalo, memtorego, memwriteo,
+    output reg [4:0] instr117o,
+    input [4:0]instr117
+);
+
+    always @(posedge clk) begin
+        if (reset_n == 1'b1) begin
+            addsumo    <= 64'b0;
+            aluresulto <= 64'b0;
+            rd2o       <= 64'b0;
+            zeroo      <= 1'b0;
+            pcsrco     <= 1'b0;
+            memreado   <= 1'b0;
+            beqo       <= 1'b0;
+            bneo       <= 1'b0;
+            jalo       <= 1'b0;
+            memtorego  <= 1'b0;
+            memwriteo  <= 1'b0;
+            instr117o  <= 5'b0;
+        end
+        else begin
+            addsumo    <= addsum;
+            aluresulto <= aluresult;
+            rd2o       <= rd2;
+            zeroo      <= zero;
+            pcsrco     <= pcsrc;
+            memreado   <= memread;
+            beqo       <= beq;
+            bneo       <= bne;
+            jalo       <= jal;
+            memtorego  <= memtoreg;
+            memwriteo  <= memwrite;
+            instr117o  <= instr117;
+        end
+    end
+
+endmodule // EXE_MEM_REG
+
+module testbench;
+
+    // Inputs
+    reg clk;
+    reg reset_n,pcsrc;
+    reg memread, beq, bne, jal, memtoreg, memwrite;
+    reg [63:0] addsum, aluresult, rd2;
+    reg [4:0]instr117;
+
+    // Outputs
+    wire [63:0] addsumo, aluresulto, rd2o;
+    wire zeroo;
+    wire  pcsrco;
+    wire memreado, beqo, bneo, jalo, memtorego, memwriteo;
+    wire [4:0] instr117o;
+
+    // Instantiate the unit under test (UUT)
+    EXE_MEM_REG uut (
+        .clk(clk),
+        .reset_n(reset_n),
+        .memread(memread),
+        .zero(zero),
+        .beq(beq),
+        .bne(bne),
+        .jal(jal),
+        .memtoreg(memtoreg),
+        .memwrite(memwrite),
+        .addsum(addsum),
+        .aluresult(aluresult),
+        .rd2(rd2),
+        .pcsrc(pcsrc),
+        .addsumo(addsumo),
+        .aluresulto(aluresulto),
+        .rd2o(rd2o),
+        .zeroo(zeroo),
+        .pcsrco(pcsrco),
+        .memreado(memreado),
+        .beqo(beqo),
+        .bneo(bneo),
+        .jalo(jalo),
+        .memtorego(memtorego),
+        .memwriteo(memwriteo),
+        .instr117o(instr117o),
+        .instr117(instr117)
+    );
+
+    // Clock generation
+    always #5 clk=~clk;
+
+    // Assign input values
+    initial begin
+        clk = 0;
+        reset_n = 0;
+        memread = 0;
+        beq = 0;
+        bne = 0;
+        jal = 0;
+        memtoreg = 0;
+        memwrite = 0;
+        addsum = 64'hdeadbeefdeadbeef;
+        aluresult = 64'habcdefabcdefabcd;
+        rd2 = 64'h1234567890abcdef;
+        pcsrc = 1'b1;
+        instr117 = 5'b10101;
+
+        // Wait for one time unit for values to propagate
+        #100;
+
+        // Display initial results
+        $display("Initial values:");
+        $display("addsumo = %h, aluresulto = %h, rd2o = %h, zeroo = %b, pcsrco = %b, memreado = %b, beqo = %b, bneo = %b, jalo = %b, memtorego = %b, memwriteo = %b, instr117o = %b",
+                  addsumo, aluresulto, rd2o, zeroo, pcsrco, memreado, beqo, bneo, jalo, memtorego, memwriteo, instr117o);
+
+        // Assert reset
+        reset_n = 1;
+        #100;
+    
+
+        // Display results after reset
+        $display("--------------------------------------------------");
+        $display("After reset:");
+        $display("addsumo = %h, aluresulto = %h, rd2o = %h, zeroo = %b, pcsrco = %b, memreado = %b, beqo = %b, bneo = %b, jalo = %b, memtorego = %b, memwriteo = %b, instr117o = %b",
+                  addsumo, aluresulto, rd2o, zeroo, pcsrco, memreado, beqo, bneo, jalo, memtorego, memwriteo, instr117o);
+
+        $finish;  // End simulation
+    end
+
+endmodule // testbench
+
+
 
