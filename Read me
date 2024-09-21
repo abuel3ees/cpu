@@ -1,1 +1,4 @@
-
+RISC - V CPU
+This is a 5 stage piplined CPU based on the RISC-V architecure (reduced instruction set computer - v) 
+It was created as part of a computer architecture course
+you may take insipiration, but please do not plagiarize.
