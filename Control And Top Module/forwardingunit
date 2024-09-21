@@ -1,1 +1,126 @@
+module forwarding_unit ( MEM_WB_RegWrite,MEM_WB_RegisterRd,EX_MEM_RegWrite,EX_MEM_RegisterRd,ID_EX_RegisterRs1,ID_EX_RegisterRs2,ForwardA,ForwardB);
+    input MEM_WB_RegWrite;
+    input [4:0] MEM_WB_RegisterRd;
+    input EX_MEM_RegWrite;
+    input [4:0] EX_MEM_RegisterRd;
+    input [4:0] ID_EX_RegisterRs1;
+    input [4:0] ID_EX_RegisterRs2;
+    output reg [1:0] ForwardA;
+    output reg [1:0] ForwardB;
+
+always @(*) begin
+
+    ForwardA = 2'b00;
+    ForwardB = 2'b00;
+    
+    if (MEM_WB_RegWrite &&
+        (MEM_WB_RegisterRd != 0) &&
+        !(EX_MEM_RegWrite && (EX_MEM_RegisterRd != 0) &&
+          (EX_MEM_RegisterRd == ID_EX_RegisterRs1)) &&
+        (MEM_WB_RegisterRd == ID_EX_RegisterRs1)) begin
+        ForwardA = 2'b01;
+    end
+    
+    if (MEM_WB_RegWrite &&
+        (MEM_WB_RegisterRd != 0) &&
+        !(EX_MEM_RegWrite && (EX_MEM_RegisterRd != 0) &&
+          (EX_MEM_RegisterRd == ID_EX_RegisterRs2)) &&
+        (MEM_WB_RegisterRd == ID_EX_RegisterRs2)) begin
+        ForwardB = 2'b01;
+    end
+end
+
+endmodule
+
+module forwarding_unit_tb;
+    reg MEM_WB_RegWrite;
+    reg [4:0] MEM_WB_RegisterRd;
+    reg EX_MEM_RegWrite;
+    reg [4:0] EX_MEM_RegisterRd;
+    reg [4:0] ID_EX_RegisterRs1;
+    reg [4:0] ID_EX_RegisterRs2;
+
+    // Outputs
+    wire [1:0] ForwardA;
+    wire [1:0] ForwardB;
+
+    forwarding_unit uut (
+        .MEM_WB_RegWrite(MEM_WB_RegWrite),
+        .MEM_WB_RegisterRd(MEM_WB_RegisterRd),
+        .EX_MEM_RegWrite(EX_MEM_RegWrite),
+        .EX_MEM_RegisterRd(EX_MEM_RegisterRd),
+        .ID_EX_RegisterRs1(ID_EX_RegisterRs1),
+        .ID_EX_RegisterRs2(ID_EX_RegisterRs2),
+        .ForwardA(ForwardA),
+        .ForwardB(ForwardB)
+    );
+
+    initial begin
+        MEM_WB_RegWrite = 0;
+        MEM_WB_RegisterRd = 0;
+        EX_MEM_RegWrite = 0;
+        EX_MEM_RegisterRd = 0;
+        ID_EX_RegisterRs1 = 0;
+        ID_EX_RegisterRs2 = 0;
+
+        #5;
+
+        MEM_WB_RegWrite = 1;
+        MEM_WB_RegisterRd = 5'b00010;
+        EX_MEM_RegWrite = 0;
+        EX_MEM_RegisterRd = 5'b00000;
+        ID_EX_RegisterRs1 = 5'b00001;
+        ID_EX_RegisterRs2 = 5'b00011;
+        #10;
+        $display("Test case 1: ForwardA = %b, ForwardB = %b", ForwardA, ForwardB);
+
+        MEM_WB_RegWrite = 1;
+        MEM_WB_RegisterRd = 5'b00001;
+        EX_MEM_RegWrite = 0;
+        EX_MEM_RegisterRd = 5'b00000;
+        ID_EX_RegisterRs1 = 5'b00001;
+        ID_EX_RegisterRs2 = 5'b00011;
+        #10;
+        $display("Test case 2: ForwardA = %b, ForwardB = %b", ForwardA, ForwardB);
+
+        MEM_WB_RegWrite = 1;
+        MEM_WB_RegisterRd = 5'b00011;
+        EX_MEM_RegWrite = 0;
+        EX_MEM_RegisterRd = 5'b00000;
+        ID_EX_RegisterRs1 = 5'b00001;
+        ID_EX_RegisterRs2 = 5'b00011;
+        #10;
+        $display("Test case 3: ForwardA = %b, ForwardB = %b", ForwardA, ForwardB);
+
+        MEM_WB_RegWrite = 1;
+        MEM_WB_RegisterRd = 5'b00001;
+        EX_MEM_RegWrite = 0;
+        EX_MEM_RegisterRd = 5'b00000;
+        ID_EX_RegisterRs1 = 5'b00001;
+        ID_EX_RegisterRs2 = 5'b00001;
+        #10;
+        $display("Test case 4: ForwardA = %b, ForwardB = %b", ForwardA, ForwardB);
+
+        MEM_WB_RegWrite = 1;
+        MEM_WB_RegisterRd = 5'b00001;
+        EX_MEM_RegWrite = 1;
+        EX_MEM_RegisterRd = 5'b00001;
+        ID_EX_RegisterRs1 = 5'b00001;
+        ID_EX_RegisterRs2 = 5'b00001;
+        #10;
+        $display("Test case 5: ForwardA = %b, ForwardB = %b", ForwardA, ForwardB);
+
+        MEM_WB_RegWrite = 0;
+        MEM_WB_RegisterRd = 5'b00000;
+        EX_MEM_RegWrite = 0;
+        EX_MEM_RegisterRd = 5'b00000;
+        ID_EX_RegisterRs1 = 5'b00001;
+        ID_EX_RegisterRs2 = 5'b00001;
+        #10;
+        $display("Test case 6: ForwardA = %b, ForwardB = %b", ForwardA, ForwardB);
+
+        $finish;
+    end
+endmodule
+
 
