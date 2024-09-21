@@ -1,1 +1,45 @@
 
+module sepc(clk, reset_n, exflag, pc, pcout);
+  input clk, reset_n, exflag;
+  input [31:0] pc;
+  output reg [31:0] pcout;
+  
+  always @(posedge clk) begin
+    if (reset_n)
+      pcout <= 0;
+    else if (!exflag)
+      pcout <= 0;
+    else
+      pcout <= pc;
+  end
+endmodule
+module tb_sepc;
+  reg clk;
+  reg reset_n;
+  reg exflag;
+  reg [31:0] pc;
+  wire [31:0] pcout;
+
+  sepc uut (
+    .clk(clk),
+    .reset_n(reset_n),
+    .exflag(exflag),
+    .pc(pc),
+    .pcout(pcout)
+  );
+
+  initial begin
+    clk = 0;
+    forever #5 clk = ~clk;
+  end
+
+  initial begin
+    reset_n=0;
+   exflag=1;
+    pc=32'hDEADBEEF;
+    #10
+    
+    $display("The PC saved in SEPC is %b",pcout);
+  end
+endmodule
+
