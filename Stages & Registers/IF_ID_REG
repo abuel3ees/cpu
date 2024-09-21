@@ -1,1 +1,68 @@
+module IF_ID_REG(clk, reset_n,instruction,address,addresstobuffer,instructiontomem);
+input clk,reset_n;
+input [31:0]instruction,address;
+output reg [31:0]addresstobuffer,instructiontomem;
+always @ (posedge clk)begin
+if(reset_n==1)begin
+addresstobuffer=0;
+instructiontomem=0;
+end
+else begin
+addresstobuffer=address;
+instructiontomem=instruction;
+end
+end
+
+
+endmodule //IF_ID_REG
+
+module testbench;
+
+    // Inputs
+    reg clk;
+    reg reset_n;
+    reg [31:0] instruction;
+    reg [31:0] address;
+
+    // Outputs
+    wire [31:0] addresstobuffer;
+    wire [31:0] instructiontomem;
+
+    // Instantiate the unit under test (UUT)
+    IF_ID_REG uut (
+        .clk(clk),
+        .reset_n(reset_n),
+        .instruction(instruction),
+        .address(address),
+        .addresstobuffer(addresstobuffer),
+        .instructiontomem(instructiontomem)
+    );
+
+    // Clock generation
+    initial begin
+        clk = 0;
+        forever #5 clk = ~clk;
+    end
+
+    // Stimulus
+    initial begin
+        #10
+        reset_n = 0;
+        #10
+        instruction = 32'b11011010100111011100100101010010;
+        #10
+        address = 32'b10101001110100100101101111100001;
+        #10
+
+
+        $display("Address to buffer:%b                   Instructiontomem:%b",addresstobuffer,instructiontomem);
+        
+        #10 reset_n=1;
+        #10
+        $display("Address to buffer:%b                   Instructiontomem:%b",addresstobuffer,instructiontomem);
+
+    end
+
+
+endmodule
 
