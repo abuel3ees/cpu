@@ -1,1 +1,102 @@
+module hazard_detection_unit (
+    input ID_EX_MemRead,
+    input [4:0] ID_EX_RegisterRt,
+    input [4:0] IF_ID_RegisterRs,
+    input [4:0] IF_ID_RegisterRt,
+    output reg PCWrite,
+    output reg IF_ID_Write,
+    output reg ControlMux
+);
+
+always @(*) begin
+    // Default values
+    PCWrite = 1;
+    IF_ID_Write = 1;
+    ControlMux = 0;
+
+    // Hazard detection
+    if (ID_EX_MemRead && 
+        ((ID_EX_RegisterRt == IF_ID_RegisterRs) || 
+         (ID_EX_RegisterRt == IF_ID_RegisterRt))) begin
+        PCWrite = 0;
+        IF_ID_Write = 0;
+        ControlMux = 1;
+    end
+end
+
+endmodule
+
+module hazard_detection_unit_tb;
+    
+    reg ID_EX_MemRead;
+    reg [4:0] ID_EX_RegisterRt;
+    reg [4:0] IF_ID_RegisterRs;
+    reg [4:0] IF_ID_RegisterRt;
+
+    wire PCWrite;
+    wire IF_ID_Write;
+    wire ControlMux;
+
+    hazard_detection_unit uut (
+        .ID_EX_MemRead(ID_EX_MemRead),
+        .ID_EX_RegisterRt(ID_EX_RegisterRt),
+        .IF_ID_RegisterRs(IF_ID_RegisterRs),
+        .IF_ID_RegisterRt(IF_ID_RegisterRt),
+        .PCWrite(PCWrite),
+        .IF_ID_Write(IF_ID_Write),
+        .ControlMux(ControlMux)
+    );
+
+    initial begin
+        // Initial values
+        ID_EX_MemRead = 0;
+        ID_EX_RegisterRt = 0;
+        IF_ID_RegisterRs = 0;
+        IF_ID_RegisterRt = 0;
+        
+        #5;
+        // Test case 1
+        ID_EX_MemRead = 0;
+        ID_EX_RegisterRt = 5'b00001;
+        IF_ID_RegisterRs = 5'b00010;
+        IF_ID_RegisterRt = 5'b00011;
+        #10;
+        $display("Test case 1: PCWrite = %b, IF_ID_Write = %b, ControlMux = %b", PCWrite, IF_ID_Write, ControlMux);
+
+        // Test case 2
+        ID_EX_MemRead = 1;
+        ID_EX_RegisterRt = 5'b00001;
+        IF_ID_RegisterRs = 5'b00001;
+        IF_ID_RegisterRt = 5'b00010;
+        #10;
+        $display("Test case 2: PCWrite = %b, IF_ID_Write = %b, ControlMux = %b", PCWrite, IF_ID_Write, ControlMux);
+
+        // Test case 3
+        ID_EX_MemRead = 1;
+        ID_EX_RegisterRt = 5'b00001;
+        IF_ID_RegisterRs = 5'b00010;
+        IF_ID_RegisterRt = 5'b00001;
+        #10;
+        $display("Test case 3: PCWrite = %b, IF_ID_Write = %b, ControlMux = %b", PCWrite, IF_ID_Write, ControlMux);
+
+        // Test case 4
+        ID_EX_MemRead = 1;
+        ID_EX_RegisterRt = 5'b00001;
+        IF_ID_RegisterRs = 5'b00010;
+        IF_ID_RegisterRt = 5'b00011;
+        #10;
+        $display("Test case 4: PCWrite = %b, IF_ID_Write = %b, ControlMux = %b", PCWrite, IF_ID_Write, ControlMux);
+
+        // Test case 5
+        ID_EX_MemRead = 0;
+        ID_EX_RegisterRt = 5'b00001;
+        IF_ID_RegisterRs = 5'b00001;
+        IF_ID_RegisterRt = 5'b00001;
+        #10;
+        $display("Test case 5: PCWrite = %b, IF_ID_Write = %b, ControlMux = %b", PCWrite, IF_ID_Write, ControlMux);
+
+        $finish;
+    end
+endmodule
+
 
