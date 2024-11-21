@@ -3,8 +3,8 @@ module data_memory(clk,reset_n,address,write_enable,read_enable,write_data,read_
     input reset_n;
     input [11:0] address;
     input [1:0] write_enable;
-    input [1:0] read_enable;
-    input [6:0] write_data;
+    input [31:0] read_enable;
+    input [31:0] write_data;
     output reg [6:0] read_data;
     reg [31:0] mem[4095:0]; 
 
