@@ -19,7 +19,7 @@ module data_memory(clk,reset_n,address,write_enable,read_enable,write_data,read_
             mem[address] <= {write_data, write_data, write_data, write_data};  
             else if(write_enable==2'b01) 
             mem[address][7:0] <= write_data; 
-            if (read_enable==2'b01)
+            if (read_enable==2'b00)
                 read_data <= mem[address][7:0];
             else if (read_enable==2'b01) 
                 read_data <= mem[address][31:0];
